@@ -1,0 +1,7 @@
+"main.obj",
+"UartDriver.obj",
+"I2C_Driver.obj",
+"DS1621_DeviceFrame.obj",
+"DelayDriver.obj" 
+TO "Project" 
+RAMSIZE(256) 

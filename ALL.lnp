@@ -1,0 +1,11 @@
+"test.obj",
+"UartDriver.obj",
+"I2C_Driver.obj",
+"DS1621_DeviceFrame.obj",
+"DelayDriver.obj",
+"MCP3204Driver.obj",
+"LCD_Driver.obj",
+"Ext_IntrruptDriver.obj",
+"RTC_Driver.obj" 
+TO "ALL" 
+RAMSIZE(256) 

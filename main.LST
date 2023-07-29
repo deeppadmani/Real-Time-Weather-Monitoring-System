@@ -1,0 +1,373 @@
+C51 COMPILER V9.01   MAIN                                                                  07/02/2020 18:08:35 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil_v4\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /*Main.c*/
+   2          #include "header.h"
+   3          extern u8 h,m,s,pm;
+   4          s16 TEMP,POT,LDR;
+   5          u8 log[10];
+   6          void time_print();
+   7          void Log_Print();
+   8          void EEPROM_clr();
+   9          u8 saveCount=0,logCount=0,isrFlag=0;
+  10          int main()
+  11          {
+  12   1      
+  13   1              float Ftemp,Fpot,Fldr;
+  14   1              s16 temp;
+  15   1              
+  16   1              u8 adr=0x00; 
+  17   1              lcd_init();
+  18   1              uart_init(9600);
+  19   1              RTC_init();
+  20   1              Ext_INT0_Init();
+  21   1              EEPROM_clr();
+  22   1              temp_init();
+  23   1              while(1)
+  24   1              {
+  25   2                      TEMP=i2c_device_read_temp();
+  26   2                      POT=Adc_Read(1);
+  27   2                      LDR=Adc_Read(0);
+  28   2                      Ftemp=TEMP;
+  29   2                      Fpot=POT;
+  30   2                      Fldr=LDR;
+  31   2                      lcd_cmd(0x80);
+  32   2                      RTC_read();
+  33   2                      time_print();
+  34   2                      lcd_cmd(0xC0);
+  35   2                      lcd_string("\r\nTemp : - ");
+  36   2                      lcd_float(Ftemp/256);
+  37   2                      lcd_string(" °C");
+  38   2                      lcd_cmd(0x94);
+  39   2                      lcd_string("\r\nPot : - ");
+  40   2                      lcd_float(Fpot*5/4096);
+  41   2                      lcd_cmd(0xD4);
+  42   2                      lcd_string("\r\nLDR : - ");
+  43   2                      lcd_float((Fldr/41)-1);
+  44   2              
+  45   2      //              uart_hex(h);
+  46   2      //              uart_string("\r\n");
+  47   2      //              uart_string("\r\nTemp : - ");
+  48   2      //              uart_int(TEMP/256);
+  49   2      //              uart_string(" °C");
+  50   2      //              uart_string("\r\nPot : - ");
+  51   2      //              uart_float(POT*5/4096); 
+  52   2      //              uart_string("\r\nLDR : - ");
+  53   2      //              uart_int((LDR/41)-1);
+  54   2                      
+  55   2                      saveCount++;
+C51 COMPILER V9.01   MAIN                                                                  07/02/2020 18:08:35 PAGE 2   
+
+  56   2                      if(saveCount==5)
+  57   2                      {
+  58   3                              uart_string("Saving...\r\n");
+  59   3      //                      log[0]=h;
+  60   3      //                      log[1]=m;
+  61   3      //                      log[2]=s;
+  62   3      //                      log[3]=TEMP;
+  63   3      //                      log[4]=TEMP>>8;
+  64   3      //                      log[5]=LDR;
+  65   3      //                      log[6]=LDR>>8;
+  66   3      //                      log[7]=POT;
+  67   3      //                      log[8]=POT>>8;
+  68   3      //                      log[9]='\0';
+  69   3                              saveCount=0;
+  70   3                              uart_hex(adr);
+  71   3              //              i2c_write_string(0xA0,logCount,log);
+  72   3                              logCount=logCount+1;
+  73   3                              uart_string("\r\n");
+  74   3                      //      uart_string("-------------------------\r\n");
+  75   3                      //      uart_string("\r\n");
+  76   3                              i2c_Device_Write(0xA0,adr,h);
+  77   3                              adr=adr+1;
+  78   3                              delay_ms(10);
+  79   3                              i2c_Device_Write(0xA0,adr,m);
+  80   3                              adr=adr+1;
+  81   3                              delay_ms(10);
+  82   3                              i2c_Device_Write(0xA0,adr,s);
+  83   3                              adr=adr+1;
+  84   3                              delay_ms(10);
+  85   3                              i2c_Device_Write(0xA0,adr,TEMP);
+  86   3                              adr=adr+1;
+  87   3                              delay_ms(10);
+  88   3                      //      temp=temp>>8;
+  89   3                              i2c_Device_Write(0xA0,adr,TEMP>>8);
+  90   3                              adr=adr+1;
+  91   3                              delay_ms(10);
+  92   3                              i2c_Device_Write(0xA0,adr,LDR);
+  93   3                              adr=adr+1;
+  94   3                              delay_ms(10);
+  95   3                              i2c_Device_Write(0xA0,adr,LDR>>8);
+  96   3                              adr=adr+1;
+  97   3                              delay_ms(10);
+  98   3                              i2c_Device_Write(0xA0,adr,POT);
+  99   3                              adr=adr+1;
+ 100   3                              delay_ms(10);
+ 101   3                              i2c_Device_Write(0xA0,adr,POT>>8);
+ 102   3                              adr=adr+1;
+ 103   3                              delay_ms(10);
+ 104   3                      //      uart_string("\r\n");
+ 105   3                      //      uart_string("-------------------------\r\n");
+ 106   3                               if(logCount==10)
+ 107   3                               {
+ 108   4                                      logCount=0;
+ 109   4                                      adr=0x00;
+ 110   4                               }
+ 111   3                      }
+ 112   2                      if(isrFlag==1)
+ 113   2                      {
+ 114   3                              Log_Print();
+ 115   3                              isrFlag=0;
+ 116   3                      }               
+ 117   2                      delay_ms(1000);
+C51 COMPILER V9.01   MAIN                                                                  07/02/2020 18:08:35 PAGE 3   
+
+ 118   2                      lcd_cmd(0x01);
+ 119   2              }
+ 120   1      }
+*** WARNING C280 IN LINE 14 OF MAIN.C: 'temp': unreferenced local variable
+ 121          void time_print()
+ 122          {
+ 123   1                              u8 h1;
+ 124   1              //      hour=h/16;
+ 125   1              //      hour=hour*10+(h%16);
+ 126   1                      if(h > 0x12)
+ 127   1                      {
+ 128   2                              h1=h-0x12;      
+ 129   2                      }
+ 130   1                      else
+ 131   1                      {
+ 132   2                              h1=h;
+ 133   2                      }
+ 134   1                      if(h==0x00)
+ 135   1                              h1=0x12;
+ 136   1              //      lcd_int(hour);
+ 137   1                      lcd_char(h1/16+48);     //hour
+ 138   1                      lcd_char(h1%16+48);     //hour
+ 139   1                      lcd_char(':');
+ 140   1                      
+ 141   1                      lcd_char(m/16+48);      //minute
+ 142   1                      lcd_char(m%16+48);      //minute
+ 143   1                      lcd_char(':');
+ 144   1                      
+ 145   1                      lcd_char(s/16+48);      //second
+ 146   1                      lcd_char(s%16+48);      //second
+ 147   1                      lcd_char(0x80+9);
+ 148   1                              pm=h&(1<<5);
+ 149   1                      if(pm)
+ 150   1                              lcd_string("PM");
+ 151   1                      else
+ 152   1                              lcd_string("AM");
+ 153   1                      
+ 154   1      }
+ 155          
+ 156          void INT0_Handler(void) interrupt 0
+ 157          {
+ 158   1                      isrFlag=1;
+ 159   1      //              u8 dt1;
+ 160   1      //              s16 f1,f2;
+ 161   1      //              float Ltemp;
+ 162   1      //              dt1=i2c_Device_Read(0xA0,0x0);
+ 163   1      //              uart_string("Lower :- ");
+ 164   1      //              uart_hex(dt1);
+ 165   1      //      //      uart_tx(dt1);
+ 166   1      //              delay_ms(10);
+ 167   1      //              f1=dt1;
+ 168   1      //              dt1=0;
+ 169   1      //              dt1=i2c_Device_Read(0xA0,0x3);
+ 170   1      //              uart_string("\r\nHigher :- ");
+ 171   1      //              uart_hex(dt1);
+ 172   1      //               f2=dt1;
+ 173   1      //               f1|=f2<<8;
+ 174   1      //               Ltemp=f1;
+ 175   1      //      //       uart_string("\r\n*********************\r\n");
+ 176   1      //      //       uart_hex(f1);
+ 177   1      //      //       uart_string("\r\n*********************\r\n");
+ 178   1      //               uart_float(Ltemp/256);
+C51 COMPILER V9.01   MAIN                                                                  07/02/2020 18:08:35 PAGE 4   
+
+ 179   1      //      //      uart_string("\r\n");
+ 180   1      
+ 181   1      }
+ 182          void Log_Print()
+ 183          {
+ 184   1              u8 Logadr,cnt=0;
+ 185   1              u8 dt1,h1,pm;
+ 186   1              s16 f1,f2;
+ 187   1              float Ltemp;
+ 188   1              for(Logadr=0x00;Logadr<=100;cnt++)
+ 189   1              {
+ 190   2                      dt1=i2c_Device_Read(0xA0,Logadr);
+ 191   2                       if(dt1 > 0x12)
+ 192   2                              {
+ 193   3                                      h1=dt1-0x12;    
+ 194   3                              }
+ 195   2                              else
+ 196   2                              {
+ 197   3                                      h1=dt1;
+ 198   3                              }
+ 199   2                              if(dt1==0x00)
+ 200   2                                      h1=0x12;
+ 201   2                      //      lcd_int(hour);
+ 202   2                              uart_tx(h1/16+48);      //hour
+ 203   2                              uart_tx(h1%16+48);      //hour
+ 204   2                              uart_tx(':');
+ 205   2      
+ 206   2                      
+ 207   2                              Logadr=Logadr+1;
+ 208   2                              delay_ms(10);
+ 209   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 210   2      
+ 211   2                              uart_tx(dt1/16+48);     //minute
+ 212   2                              uart_tx(dt1%16+48);     //minute
+ 213   2                              uart_tx(':');
+ 214   2      
+ 215   2                              
+ 216   2                              Logadr=Logadr+1;
+ 217   2                              delay_ms(10);
+ 218   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 219   2                              uart_tx(dt1/16+48);     //second
+ 220   2                              uart_tx(dt1%16+48);     //second
+ 221   2              
+ 222   2                      //      lcd_char(0x80+9);
+ 223   2                              pm=dt1&(1<<5);
+ 224   2                              if(pm)
+ 225   2                                      uart_string("PM");
+ 226   2                              else
+ 227   2                                      uart_string("AM");
+ 228   2                              
+ 229   2                              uart_string("      ");
+ 230   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 231   2                              Logadr=Logadr+1;
+ 232   2                              delay_ms(10);
+ 233   2                              f1=dt1;
+ 234   2                              dt1=0;
+ 235   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 236   2                              Logadr=Logadr+1;
+ 237   2                              delay_ms(10);
+ 238   2                              f2=dt1;
+ 239   2                              f1|=f2<<8;
+ 240   2                              Ltemp=f1;
+C51 COMPILER V9.01   MAIN                                                                  07/02/2020 18:08:35 PAGE 5   
+
+ 241   2                              uart_float(Ltemp/256);
+ 242   2      
+ 243   2                              uart_string("      ");
+ 244   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 245   2                              Logadr=Logadr+1;
+ 246   2                              delay_ms(10);
+ 247   2                              f1=dt1;
+ 248   2                              dt1=0;
+ 249   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 250   2                              Logadr=Logadr+1;
+ 251   2                              delay_ms(10);
+ 252   2                              f2=dt1;
+ 253   2                              f1|=f2<<8;
+ 254   2                              Ltemp=f1;
+ 255   2                              uart_float((Ltemp/41)-1);
+ 256   2      
+ 257   2      
+ 258   2                              uart_string("      ");
+ 259   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 260   2                              Logadr=Logadr+1;
+ 261   2                              delay_ms(10);
+ 262   2                              f1=dt1;
+ 263   2                              dt1=0;
+ 264   2                              dt1=i2c_Device_Read(0xA0,Logadr);
+ 265   2                              Logadr=Logadr+1;
+ 266   2                              delay_ms(10);
+ 267   2                              f2=dt1;
+ 268   2                              f1|=f2<<8;
+ 269   2                              Ltemp=f1;
+ 270   2                              uart_float(Ltemp*5/4096);
+ 271   2                              uart_string("\r\n");
+ 272   2                              if(cnt==logCount)
+ 273   2                                      break;
+ 274   2              }
+ 275   1      
+ 276   1      }
+ 277          //void Log_Print()
+ 278          //{
+ 279          //              u8 h1,logAddr;
+ 280          //              s16 f1,f2;
+ 281          //              for(logAddr=0;logAddr<=120;logAddr=logAddr+10)
+ 282          //              {
+ 283          //                      i2c_read_string(0xA0,logAddr,log);
+ 284          //                      if(log[0] > 0x12)
+ 285          //                      {
+ 286          //                              h1=log[0]-0x12; 
+ 287          //                      }
+ 288          //                      else
+ 289          //                      {
+ 290          //                              h1=log[0];
+ 291          //                      }
+ 292          //                      if(log[0]==0x00)
+ 293          //                              h1=0x12;
+ 294          //              //      lcd_int(hour);
+ 295          //                      uart_tx(h1/16+48);      //hour
+ 296          //                      uart_tx(h1%16+48);      //hour
+ 297          //                      uart_tx(':');
+ 298          //              
+ 299          //                      uart_tx(log[1]/16+48);  //minute
+ 300          //                      uart_tx(log[1]%16+48);  //minute
+ 301          //                      uart_tx(':');
+ 302          //              
+C51 COMPILER V9.01   MAIN                                                                  07/02/2020 18:08:35 PAGE 6   
+
+ 303          //                      uart_tx(log[2]/16+48);  //second
+ 304          //                      uart_tx(log[2]%16+48);  //second
+ 305          //              //      lcd_char(0x80+9);
+ 306          //                      pm=h&(1<<5);
+ 307          //                      if(pm)
+ 308          //                              uart_string("PM");
+ 309          //                      else
+ 310          //                              uart_string("AM");
+ 311          //                      
+ 312          //                      uart_string("      ");
+ 313          //                      f1=log[3];
+ 314          //                      f2=log[4];
+ 315          //                      f1|=f2<<8;
+ 316          //                      uart_float(f1/256);
+ 317          //                      uart_string("      ");
+ 318          //                      f1=log[5];
+ 319          //                      f2=log[6];
+ 320          //                      f1|=f2<<8;
+ 321          //                      uart_float((f1/41)-1);
+ 322          //                      uart_string("      ");
+ 323          //                      f1=log[7];
+ 324          //                      f2=log[8];
+ 325          //                      f1|=f2<<8;
+ 326          //                      uart_float(f1*5/4096);
+ 327          //                      uart_string("\r\n");
+ 328          //                      delay_ms(10);   
+ 329          //              }
+ 330          //}
+ 331          void EEPROM_clr()
+ 332          {
+ 333   1              u8 i=0;
+ 334   1              for(i=0;i<=200;i++)
+ 335   1              {
+ 336   2                      i2c_Device_Write(0xA0,i,0x00);
+ 337   2                      delay_ms(10);
+ 338   2              }
+ 339   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1158    ----
+   CONSTANT SIZE    =     66    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     19      27
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

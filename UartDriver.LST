@@ -1,0 +1,164 @@
+C51 COMPILER V9.01   UARTDRIVER                                                            07/11/2020 18:13:30 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE UARTDRIVER
+OBJECT MODULE PLACED IN UartDriver.OBJ
+COMPILER INVOKED BY: C:\Keil_v4\C51\BIN\C51.EXE UartDriver.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          
+   2          
+   3          #include"header.h"
+   4          
+   5          void uart_init(u16 baud)
+   6          {
+   7   1              TMOD |=0x20;
+   8   1              SCON |=0x50;
+   9   1              switch(baud)
+  10   1              {
+  11   2                      case 7200:TH1=252;break;
+  12   2                      case 9600:TH1=253;break;    //TH1=(256-(2^smod) *XTAL)/(12*36*BaudRate)   //smod=1 for double the baudra
+             -te
+  13   2                      case 28800:TH1=255;     break;
+  14   2                      case 57600:TH1=255;PCON|=0x80;break;    //enable smod
+  15   2                      default:TH1=253;
+  16   2              }
+  17   1              TR1=1; //start timer1 
+  18   1      }
+  19          
+  20          void uart_tx(u8 byte)
+  21          {
+  22   1              SBUF=byte;
+  23   1              while(TI==0);
+  24   1              TI=0;
+  25   1      }
+  26          
+  27          /*u8 uart_rx()
+  28          {       
+  29                  while(RI==0);
+  30                  RI=0;
+  31                  return SBUF;
+  32          }         */
+  33          
+  34          void uart_string(s8 *ptr)
+  35          {
+  36   1              int i;
+  37   1              for(i=0;ptr[i];i++)
+  38   1              {       
+  39   2                      SBUF=ptr[i];
+  40   2                      while(TI==0);
+  41   2                      TI=0;
+  42   2              }
+  43   1      }
+  44          
+  45          /*void uart_rx_string(s8 *buf,u8 MaxSize)
+  46          {
+  47                  u8 i;
+  48                  for(i=0;i<MaxSize;i++)
+  49                  {
+  50                          buf[i]=uart_rx();
+  51                          if(buf[i]=='\r')
+  52                                  break;
+  53                  }
+  54                  buf[i]=0;
+C51 COMPILER V9.01   UARTDRIVER                                                            07/11/2020 18:13:30 PAGE 2   
+
+  55          } */
+  56          
+  57          void uart_int(s16 temp)
+  58          {
+  59   1              u16 i,sum=0,c=0;
+  60   1              if(temp==0)
+  61   1                      uart_tx('0');
+  62   1              if(temp<0)
+  63   1              {
+  64   2                      uart_tx('-');
+  65   2                      i=-temp;
+  66   2              }
+  67   1              else
+  68   1                      i=temp;
+  69   1              for(c=0;i;i=i/10)
+  70   1              {
+  71   2                       sum=sum*10+i%10;
+  72   2                       c++;
+  73   2              }
+  74   1              for(i=sum;i;i=i/10)
+  75   1              {
+  76   2                       uart_tx((i%10)+48);
+  77   2                       c--;
+  78   2              }
+  79   1              while(c)
+  80   1              {
+  81   2                        uart_tx('0');
+  82   2                        c--;
+  83   2              }
+  84   1      }
+  85          
+  86          void uart_float(s32_f n)
+  87          {
+  88   1              int n1;
+  89   1              float n2;
+  90   1              n1=n;
+  91   1              n2=n-n1;
+  92   1              n2=n2*100;
+  93   1              if(n2<0)
+  94   1                      n2=-n2;
+  95   1              
+  96   1              uart_int(n1);
+  97   1              uart_tx('.');
+  98   1              if(n2<10)
+  99   1                      uart_tx('0');
+ 100   1              uart_int(n2);
+ 101   1      }
+ 102          
+ 103          /*void uart_hex(s16 number)
+ 104          {
+ 105                    u8 hex[10],c;
+ 106                    s8 i;
+ 107                    uart_string("0x");
+ 108                    c=0;
+ 109                    while(number>0)
+ 110                {
+ 111                  switch(number%16)
+ 112                  {
+ 113                     case 10:
+ 114                          hex[c]='A'; break;
+ 115                      case 11:
+ 116                          hex[c]='B'; break;
+C51 COMPILER V9.01   UARTDRIVER                                                            07/11/2020 18:13:30 PAGE 3   
+
+ 117                      case 12:
+ 118                          hex[c]='C'; break;
+ 119                      case 13:
+ 120                          hex[c]='D'; break;
+ 121                      case 14:
+ 122                          hex[c]='E'; break;
+ 123                      case 15:
+ 124                          hex[c]='F'; break;
+ 125                      default:
+ 126                          hex[c]=(number%16)+0x30;
+ 127                  }
+ 128                  number=number/16;
+ 129                          c++;
+ 130                   }
+ 131                   hex[c]='\0';
+ 132                   for(i=c-1;i>=0;i--)
+ 133                   {
+ 134                          uart_tx(hex[i]);
+ 135                  }
+ 136          }         */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    450    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      17
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,34 @@
+C51 COMPILER V9.01   EXT_INTRRUPTDRIVER                                                    07/11/2020 18:13:32 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE EXT_INTRRUPTDRIVER
+OBJECT MODULE PLACED IN Ext_IntrruptDriver.OBJ
+COMPILER INVOKED BY: C:\Keil_v4\C51\BIN\C51.EXE Ext_IntrruptDriver.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /*Ext_InterruptDriver.c*/
+   2          
+   3          #include "header.h"
+   4          
+   5          void Ext_INT0_Init()                            
+   6          {
+   7   1              EA  = 1;                                                        
+   8   1              EX0 = 1;
+   9   1              //IT0=1 //edge triggered 
+  10   1              IT0=1; //level triggered                                                        
+  11   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =      7    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
